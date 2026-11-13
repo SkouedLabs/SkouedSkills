@@ -1,0 +1,30 @@
+{
+  "feeds": [
+    {
+      "name": "spamhaus-drop-v4",
+      "url": "https://www.spamhaus.org/drop/drop_v4.json",
+      "enabled": true,
+      "min_entries": 100
+    },
+    {
+      "name": "spamhaus-drop-v6",
+      "url": "https://www.spamhaus.org/drop/drop_v6.json",
+      "enabled": true,
+      "min_entries": 10
+    },
+    {
+      "name": "firehol-level1",
+      "url": "https://iplists.firehol.org/files/firehol_level1.netset",
+      "enabled": false,
+      "min_entries": 1000
+    }
+  ],
+  "allow_file": "/etc/nft-blocklist/allow.list",
+  "manual_file": "/etc/nft-blocklist/manual.list",
+  "cache_dir": "/var/lib/nft-blocklist",
+  "max_shrink_ratio": 0.5,
+  "min_prefix_v4": 8,
+  "min_prefix_v6": 19,
+  "max_download_bytes": 20000000,
+  "timeout_seconds": 30
+}

@@ -1,0 +1,6 @@
+# /etc/containers/registries.d/registry.example.com.yaml  (root:root 0644)
+# Sigstore signatures are stored as OCI attachments in the registry (cosign default).
+
+docker:
+  registry.example.com:
+    use-sigstore-attachments: true

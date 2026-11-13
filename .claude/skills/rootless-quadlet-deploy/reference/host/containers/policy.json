@@ -1,0 +1,19 @@
+{
+  "default": [
+    { "type": "reject" }
+  ],
+  "transports": {
+    "docker": {
+      "registry.example.com": [
+        {
+          "type": "sigstoreSigned",
+          "keyPath": "/etc/containers/keys/registry.example.com-cosign.pub",
+          "signedIdentity": { "type": "matchRepository" }
+        }
+      ]
+    },
+    "docker-daemon": {
+      "": [ { "type": "reject" } ]
+    }
+  }
+}

@@ -1,0 +1,46 @@
+# /etc/containers/systemd/users/<UID>/myapp-db.container  (root:root 0644)
+# PostgreSQL reachable only on the pod's localhost (127.0.0.1:5432 from other containers of the pod).
+
+[Unit]
+Description=myapp PostgreSQL
+
+[Container]
+ContainerName=myapp-db
+Pod=myapp.pod
+# ADAPT: image mirrored and signed in the internal registry, pinned by digest.
+Image=registry.example.com/mirror/postgres:17-alpine@sha256:0000000000000000000000000000000000000000000000000000000000000000
+# Runs directly as the image's postgres UID (70 on Alpine, 999 on Debian-based images).
+User=70:70
+
+ReadOnly=true
+Tmpfs=/tmp:rw,size=64m,mode=1777
+Tmpfs=/var/run/postgresql:rw,size=1m,mode=1777
+Volume=myapp-db.volume:/var/lib/postgresql/data:Z
+ShmSize=128m
+
+Secret=myapp-db-password,type=mount,target=/run/secrets/db_password,mode=0400,uid=70
+Environment=POSTGRES_USER=myapp POSTGRES_DB=myapp POSTGRES_PASSWORD_FILE=/run/secrets/db_password
+Environment=PGDATA=/var/lib/postgresql/data/pgdata
+
+DropCapability=all
+NoNewPrivileges=true
+PidsLimit=256
+Ulimit=core=0:0
+PodmanArgs=--memory=1g
+
+HealthCmd=pg_isready -h 127.0.0.1 -U myapp -d myapp
+HealthInterval=10s
+HealthTimeout=5s
+HealthRetries=5
+HealthStartPeriod=30s
+HealthOnFailure=kill
+Notify=healthy
+
+LogDriver=journald
+
+[Service]
+Restart=on-failure
+TimeoutStartSec=300
+
+[Install]
+WantedBy=default.target

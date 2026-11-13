@@ -1,0 +1,5 @@
+# /etc/containers/ports.registry  (root:root 0644)
+# Loopback port blocks of application stacks. Range 18000-18999, one block of 10 per application.
+# Format: <first-port>-<last-port>  <app>  <purpose of each used port>
+
+18000-18009  myapp   18000 web

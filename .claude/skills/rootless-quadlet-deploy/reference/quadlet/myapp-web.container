@@ -1,0 +1,51 @@
+# /etc/containers/systemd/users/<UID>/myapp-web.container  (root:root 0644)
+# Application server listening on 0.0.0.0:8080 inside the pod; exposed only through the pod's
+# 127.0.0.1:18000 publication.
+
+[Unit]
+Description=myapp web
+Requires=myapp-db.service
+After=myapp-db.service
+
+[Container]
+ContainerName=myapp-web
+Pod=myapp.pod
+# ADAPT: image built and signed in CI, pinned by digest.
+Image=registry.example.com/myapp/web:1.4.2@sha256:0000000000000000000000000000000000000000000000000000000000000000
+User=10001:10001
+
+ReadOnly=true
+Tmpfs=/tmp:rw,size=64m,mode=1777
+Volume=myapp-uploads.volume:/data/uploads:Z
+# Read-only configuration from the host, dedicated to this application:
+# Volume=/etc/myapp/config.toml:/app/config.toml:ro,Z
+
+Secret=myapp-db-password,type=mount,target=/run/secrets/db_password,mode=0400,uid=10001
+Secret=myapp-app-key,type=mount,target=/run/secrets/app_key,mode=0400,uid=10001
+Environment=APP_ENV=production APP_DB_HOST=127.0.0.1 APP_DB_PORT=5432
+Environment=APP_DB_PASSWORD_FILE=/run/secrets/db_password APP_KEY_FILE=/run/secrets/app_key
+Environment=APP_TRUSTED_PROXIES=127.0.0.1
+
+DropCapability=all
+NoNewPrivileges=true
+PidsLimit=512
+Ulimit=core=0:0
+PodmanArgs=--memory=512m
+
+# ADAPT: health binary or endpoint check available inside the image.
+HealthCmd=/app/healthcheck
+HealthInterval=15s
+HealthTimeout=5s
+HealthRetries=3
+HealthStartPeriod=20s
+HealthOnFailure=kill
+Notify=healthy
+
+LogDriver=journald
+
+[Service]
+Restart=on-failure
+TimeoutStartSec=300
+
+[Install]
+WantedBy=default.target

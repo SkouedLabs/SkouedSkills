@@ -1,0 +1,97 @@
+# /etc/fail2ban/jail.local
+# Ban actions are set in jail.d/10-banaction.conf (one file per OS family).
+# backend is set per jail: some packages default it to systemd, which disables file-based jails.
+
+[DEFAULT]
+# ADAPT: add admin, VPN, monitoring and load-balancer ranges.
+ignoreip = 127.0.0.1/8 ::1
+bantime  = 1h
+findtime = 10m
+maxretry = 5
+bantime.increment    = true
+bantime.maxtime      = 1w
+bantime.overalljails = true
+dbpurgeage = 30d
+usedns     = no
+allowipv6  = auto
+
+[sshd]
+enabled  = true
+mode     = aggressive
+backend  = systemd
+port     = ssh
+maxretry = 4
+
+[nginx-probe]
+enabled  = true
+backend  = auto
+port     = http,https
+filter   = nginx-probe
+logpath  = /var/log/nginx/probe.log
+maxretry = 2
+findtime = 1h
+bantime  = 1d
+
+[nginx-limit-req-auth]
+enabled  = true
+backend  = auto
+port     = http,https
+filter   = nginx-limit-req[ngx_limit_req_zones="req_auth"]
+logpath  = /var/log/nginx/*error.log
+maxretry = 5
+findtime = 10m
+
+[nginx-limit-req]
+enabled  = true
+backend  = auto
+port     = http,https
+filter   = nginx-limit-req[ngx_limit_req_zones="req_global|req_api|req_heavy"]
+logpath  = /var/log/nginx/*error.log
+maxretry = 30
+findtime = 1m
+
+[nginx-auth]
+enabled  = true
+backend  = auto
+port     = http,https
+# ADAPT: login endpoint (regex)
+filter   = nginx-auth[auth_path="/api/v1/auth/login"]
+logpath  = /var/log/nginx/*access.log
+maxretry = 5
+findtime = 15m
+
+[nginx-4xx]
+enabled  = true
+backend  = auto
+port     = http,https
+filter   = nginx-4xx
+logpath  = /var/log/nginx/*access.log
+maxretry = 40
+findtime = 2m
+
+[nginx-http-auth]
+enabled  = true
+backend  = auto
+port     = http,https
+logpath  = /var/log/nginx/*error.log
+
+# Exposed applications with ModSecurity enabled.
+[nginx-modsecurity]
+enabled  = false
+backend  = auto
+port     = http,https
+filter   = nginx-modsecurity
+logpath  = /var/log/nginx/*error.log
+maxretry = 3
+findtime = 10m
+bantime  = 6h
+
+# Requires logtarget = /var/log/fail2ban.log (fail2ban.local).
+[recidive]
+enabled   = true
+backend   = auto
+logpath   = /var/log/fail2ban.log
+banaction = %(banaction_allports)s
+bantime   = 1w
+findtime  = 1d
+maxretry  = 3

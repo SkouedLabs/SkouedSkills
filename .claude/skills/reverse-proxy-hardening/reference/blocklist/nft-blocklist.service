@@ -1,0 +1,18 @@
+# /etc/systemd/system/nft-blocklist.service
+# Loads the blocklist table with cached sets at boot, before the network is up.
+
+[Unit]
+Description=nftables blocklist (cached sets)
+Wants=network-pre.target
+Before=network-pre.target
+After=local-fs.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/nft -f /etc/nft-blocklist/blocklist.nft
+ExecStart=/usr/local/sbin/nft-blocklist-update --cache-only
+ExecStop=/usr/sbin/nft delete table inet blocklist
+
+[Install]
+WantedBy=multi-user.target

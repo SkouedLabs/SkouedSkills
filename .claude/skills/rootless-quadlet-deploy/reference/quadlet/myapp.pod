@@ -1,0 +1,14 @@
+# /etc/containers/systemd/users/<UID>/myapp.pod  (root:root 0644)
+# Generates myapp-pod.service in the user manager of the "myapp" account.
+
+[Unit]
+Description=myapp pod
+
+[Pod]
+PodName=myapp
+# Single entry point of the stack: loopback only, reached by the host reverse proxy.
+# ADAPT: host port from /etc/containers/ports.registry, pod port of the web container.
+PublishPort=127.0.0.1:18000:8080
+
+[Install]
+WantedBy=default.target

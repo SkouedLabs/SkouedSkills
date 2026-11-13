@@ -1,0 +1,18 @@
+# /etc/systemd/system/podman-apps-nft.service
+# Loads the podman_apps table before user managers (and their containers) start.
+
+[Unit]
+Description=nftables rules for rootless Podman application ports
+Wants=network-pre.target
+Before=network-pre.target systemd-user-sessions.service
+After=local-fs.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/nft -f /etc/nftables.d/podman-apps.nft
+ExecReload=/usr/sbin/nft -f /etc/nftables.d/podman-apps.nft
+ExecStop=/usr/sbin/nft delete table inet podman_apps
+
+[Install]
+WantedBy=multi-user.target

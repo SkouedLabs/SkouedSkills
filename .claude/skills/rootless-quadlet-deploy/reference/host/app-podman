@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Run podman as an application service account without opening a shell as it.
+# Installed as /usr/local/sbin/app-podman (root:root 0755); run as root.
+#
+# Usage: app-podman <app-name> <podman arguments...>
+#   app-podman myapp ps
+#   app-podman myapp secret create myapp-db-password -   (value read from stdin)
+#   app-podman myapp unshare ls -ln /home/myapp/.local/share/containers/storage/volumes
+
+set -euo pipefail
+
+[[ $EUID -eq 0 ]] || { echo "app-podman: must run as root" >&2; exit 1; }
+[[ $# -ge 2 ]] || { echo "usage: app-podman <app-name> <podman arguments...>" >&2; exit 1; }
+
+app="$1"; shift
+uid="$(id -u "$app")"
+home="$(getent passwd "$app" | cut -d: -f6)"
+
+cd "$home"
+exec sudo -u "$app" -- env \
+    HOME="$home" \
+    XDG_RUNTIME_DIR="/run/user/${uid}" \
+    DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/${uid}/bus" \
+    podman "$@"

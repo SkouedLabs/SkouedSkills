@@ -1,0 +1,29 @@
+#!/usr/sbin/nft -f
+# /etc/nft-blocklist/blocklist.nft
+# Dedicated table, independent from firewalld/ufw/fail2ban tables: a drop here is final.
+# Sets are filled by nft-blocklist-update. Hooked at raw priority so blocked traffic never
+# reaches conntrack, nginx or fail2ban.
+
+table inet blocklist
+delete table inet blocklist
+
+table inet blocklist {
+    set allow4  { type ipv4_addr; flags interval; auto-merge; }
+    set allow6  { type ipv6_addr; flags interval; auto-merge; }
+    set manual4 { type ipv4_addr; flags interval; auto-merge; }
+    set manual6 { type ipv6_addr; flags interval; auto-merge; }
+    set feed4   { type ipv4_addr; flags interval; auto-merge; }
+    set feed6   { type ipv6_addr; flags interval; auto-merge; }
+
+    chain prerouting {
+        type filter hook prerouting priority raw; policy accept;
+
+        iif "lo" accept
+        ip  saddr @allow4  accept
+        ip6 saddr @allow6  accept
+        ip  saddr @manual4 counter drop
+        ip6 saddr @manual6 counter drop
+        ip  saddr @feed4   counter drop
+        ip6 saddr @feed6   counter drop
+    }
+}

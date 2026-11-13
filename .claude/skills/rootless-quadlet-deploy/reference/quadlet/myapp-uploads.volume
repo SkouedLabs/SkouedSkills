@@ -1,0 +1,5 @@
+# /etc/containers/systemd/users/<UID>/myapp-uploads.volume  (root:root 0644)
+
+[Volume]
+VolumeName=myapp-uploads
+Label=app=myapp

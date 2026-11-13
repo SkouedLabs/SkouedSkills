@@ -1,0 +1,7 @@
+# /etc/nft-blocklist/allow.list
+# Never blocked by manual or feed entries: admin/VPN egress, load balancers, monitoring,
+# upstream resolvers. ACME validation servers cannot be listed (changing IPs).
+# One IP or CIDR per line, IPv4 or IPv6. Comments start with "#".
+
+# 192.0.2.0/28
+# 2001:db8:10::/64

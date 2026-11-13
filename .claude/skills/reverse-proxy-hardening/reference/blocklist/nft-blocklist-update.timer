@@ -1,0 +1,14 @@
+# /etc/systemd/system/nft-blocklist-update.timer
+# Spamhaus asks not to fetch DROP more than once per hour; every 6 hours is enough.
+
+[Unit]
+Description=Refresh nftables blocklist every 6 hours
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=6h
+RandomizedDelaySec=15min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

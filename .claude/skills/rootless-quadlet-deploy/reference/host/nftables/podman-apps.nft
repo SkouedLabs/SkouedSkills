@@ -1,0 +1,32 @@
+#!/usr/sbin/nft -f
+# /etc/nftables.d/podman-apps.nft  (root:root 0644), loaded by podman-apps-nft.service.
+# Dedicated table, independent from firewalld/ufw. Matches on the owner of the local socket
+# that originates the packet (output hook), so it only concerns connections made from this host.
+
+table inet podman_apps
+delete table inet podman_apps
+
+table inet podman_apps {
+    # Accounts allowed to connect to application ports on loopback.
+    # ADAPT: reverse proxy worker user ("www-data" on Debian/Ubuntu distro nginx, "nginx" otherwise),
+    # monitoring agent user. Root (0) is kept for local health checks.
+    set proxy_users {
+        typeof meta skuid
+        elements = { 0, "nginx" }
+    }
+
+    # Optional egress allowlist per application account. pasta opens outbound connections as
+    # the account, so the owner match covers all traffic of the application's containers.
+    # ADAPT: one pair of sets per application; include the DNS resolver of the host.
+    # set myapp_egress4 { type ipv4_addr; flags interval; elements = { 192.0.2.53, 192.0.2.25 } }
+    # set myapp_egress6 { type ipv6_addr; flags interval; }
+
+    chain output {
+        type filter hook output priority filter; policy accept;
+
+        oifname "lo" tcp dport 18000-18999 meta skuid != @proxy_users counter reject with tcp reset
+
+        # meta skuid "myapp" oifname != "lo" ip  daddr != @myapp_egress4 counter reject
+        # meta skuid "myapp" oifname != "lo" ip6 daddr != @myapp_egress6 counter reject
+    }
+}
